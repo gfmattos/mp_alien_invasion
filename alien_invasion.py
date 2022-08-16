@@ -1,30 +1,30 @@
-import sys
 import pygame
+import game_functions as gf
 from settings import Settings
 from spaceship import Spaceship
+from pilot import Pilot
 
 def run_game():
 
     # Inicializa o jogo e cria um objeto para a tela 
     pygame.init()
     ai_settings = Settings()
+    ai_settings.blue_screen()
     screen = pygame.display.set_mode((ai_settings.screen_width, ai_settings.screen_height))
     pygame.display.set_caption("Alien Invasion")
     spaceship = Spaceship(screen)
+    pilot = Pilot(screen)
 
     # Inicia o laço principal do jogo
     while True:
 
         # Observa eventos de teclado e de mouse
-        for event in pygame.event.get(): 
-            if event.type == pygame.QUIT: 
-                sys.exit()
-    
-        # Redesenha a tela a cada passagem pelo laço
-        screen.fill(ai_settings.bg_color)
-        spaceship.blitme()
+        gf.check_events(spaceship)
 
-        # Deixa a tela mais recente visível
-        pygame.display.flip()
+        # Movimenta a aeronave
+        spaceship.update()
+
+        # Atualiza as imagens na tela e alterna para a nova tela.
+        gf.update_screen(ai_settings, screen, spaceship, pilot)
 
 run_game()

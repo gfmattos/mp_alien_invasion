@@ -8,4 +8,5 @@ class Settings():
         self.screen_height = 800
         self.bg_color = (230, 230, 230) 
         
-    
+    def blue_screen(self):
+        self.bg_color = (32, 65, 107) 
