@@ -12,7 +12,7 @@ def run_game():
     ai_settings.blue_screen()
     screen = pygame.display.set_mode((ai_settings.screen_width, ai_settings.screen_height))
     pygame.display.set_caption("Alien Invasion")
-    spaceship = Spaceship(screen)
+    spaceship = Spaceship(ai_settings, screen)
     pilot = Pilot(screen)
 
     # Inicia o laço principal do jogo

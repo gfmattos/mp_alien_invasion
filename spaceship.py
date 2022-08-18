@@ -4,11 +4,14 @@ import pygame
 class Spaceship():
     
     # Inicializa a espaçonave e define sua posição inicial
-    def __init__(self, screen):
+    def __init__(self, ai_settings, screen):
         self.screen = screen
+        self.ai_settings = ai_settings
         self.moving_right = False
         self.moving_left = False
 
+        #self.moving_up = False
+        #self.moving_down = False
 
         # Carrega a imagem da espaçonave e obtém seu rect
         self.image = pygame.image.load('images/spaceship.bmp')
@@ -19,13 +22,27 @@ class Spaceship():
         self.rect.centerx = self.screen_rect.centerx 
         self.rect.bottom = self.screen_rect.bottom
 
+        # Armazena um valor decimal para o centro da espaçonave
+        #self.centery = float(self.rect.centery)
+        self.centerx = float(self.rect.centerx)
+        
 
     # Flag de movimento. Atualiza a posição da espaçonave de acordo com a flag de movimento.
     def update(self):
-        if self.moving_right: 
-            self.rect.centerx += 1
-        if self.moving_left: 
-            self.rect.centerx -= 1
+        if self.moving_right and self.rect.right < self.screen_rect.right: 
+            self.centerx += self.ai_settings.ship_speed_factor
+        if self.moving_left and self.rect.left > 0: 
+            self.centerx -= self.ai_settings.ship_speed_factor
+        
+        #if self.moving_up and self.rect.top > self.screen_rect.top: 
+        #    self.centery -= self.ai_settings.ship_speed_factor
+        #if self.moving_down and self.rect.bottom < self.screen_rect.bottom: 
+        #    self.centery += self.ai_settings.ship_speed_factor
+
+        # Atualiza o objeto rect de acordo com self.center
+        #self.rect.centery = self.centery
+        self.rect.centerx = self.centerx
+
 
     # Desenha a espaçonave em sua posição atual
     def blitme(self):
