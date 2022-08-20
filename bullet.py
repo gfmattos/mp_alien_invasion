@@ -4,9 +4,9 @@ from pygame.sprite import Sprite
 # Uma classe que administra projéteis disparados pela espaçonave
 class Bullet(Sprite):
     
+    #Cria um objeto para o projétil na posição atual da espaçonave.
     def __init__(self, ai_settings, screen, spaceship):
 
-        #Cria um objeto para o projétil na posição atual da espaçonave.
         super().__init__() 
         self.screen = screen
         self.color = ai_settings.bullet_color 

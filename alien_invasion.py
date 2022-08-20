@@ -3,24 +3,25 @@ from pygame.sprite import Group
 import game_functions as gf
 from settings import Settings
 from spaceship import Spaceship
-from pilot import Pilot
 
 def run_game():
 
     # Inicializa o jogo e suas configurações de tela
     pygame.init()
     ai_settings = Settings()
-    ai_settings.blue_screen()
     screen = pygame.display.set_mode((ai_settings.screen_width, ai_settings.screen_height))
     pygame.display.set_caption("Alien Invasion")
 
     # Cria um objeto para a tela 
     spaceship = Spaceship(ai_settings, screen)
-    pilot = Pilot(screen)
 
     # Cria um grupo no qual serão armazenados os projéteis
     bullets = Group()
 
+    # Cria uma frota de alienígenas
+    aliens = Group()
+    gf.create_fleet(ai_settings, screen, aliens)
+    
     # Inicia o laço principal do jogo
     while True:
 
@@ -34,7 +35,7 @@ def run_game():
         gf.update_bullets(bullets)
 
         # Atualiza as imagens na tela e alterna para a nova tela.
-        gf.update_screen(ai_settings, screen, spaceship, pilot, bullets)
+        gf.update_screen(ai_settings, screen, spaceship, aliens, bullets)
 
 
 run_game()

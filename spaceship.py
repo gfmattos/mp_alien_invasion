@@ -10,9 +10,6 @@ class Spaceship():
         self.moving_right = False
         self.moving_left = False
 
-        #self.moving_up = False
-        #self.moving_down = False
-
         # Carrega a imagem da espaçonave e obtém seu rect
         self.image = pygame.image.load('images/spaceship.bmp')
         self.rect = self.image.get_rect()
@@ -23,7 +20,6 @@ class Spaceship():
         self.rect.bottom = self.screen_rect.bottom
 
         # Armazena um valor decimal para o centro da espaçonave
-        #self.centery = float(self.rect.centery)
         self.centerx = float(self.rect.centerx)
         
 
@@ -33,14 +29,8 @@ class Spaceship():
             self.centerx += self.ai_settings.ship_speed_factor
         if self.moving_left and self.rect.left > 0: 
             self.centerx -= self.ai_settings.ship_speed_factor
-        
-        #if self.moving_up and self.rect.top > self.screen_rect.top: 
-        #    self.centery -= self.ai_settings.ship_speed_factor
-        #if self.moving_down and self.rect.bottom < self.screen_rect.bottom: 
-        #    self.centery += self.ai_settings.ship_speed_factor
-
+    
         # Atualiza o objeto rect de acordo com self.center
-        #self.rect.centery = self.centery
         self.rect.centerx = self.centerx
 
 
