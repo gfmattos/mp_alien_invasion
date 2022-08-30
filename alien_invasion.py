@@ -4,6 +4,7 @@ import game_functions as gf
 from settings import Settings
 from spaceship import Spaceship
 from game_stats import GameStats
+from button import Button
 
 def run_game():
 
@@ -12,6 +13,9 @@ def run_game():
     ai_settings = Settings()
     screen = pygame.display.set_mode((ai_settings.screen_width, ai_settings.screen_height))
     pygame.display.set_caption("Alien Invasion")
+
+    # Cria o botão Play
+    play_button = Button(ai_settings, screen, "Play")
 
     # Cria uma instância para armazenar dados estatísticos do jogo
     stats = GameStats(ai_settings) 
@@ -35,7 +39,7 @@ def run_game():
     while True:
 
         # Observa eventos de teclado e de mouse
-        gf.check_events(ai_settings, screen, spaceship, bullets)
+        gf.check_events(ai_settings, screen, stats, play_button, spaceship, aliens, bullets)
 
         if stats.game_active:
 
@@ -48,8 +52,8 @@ def run_game():
             # Controla a movimentação dos alienígenas
             gf.update_aliens(ai_settings, stats, screen, spaceship, aliens, bullets)
 
-            # Atualiza as imagens na tela e alterna para a nova tela.
-            gf.update_screen(ai_settings, screen, spaceship, aliens, bullets)
+        # Atualiza as imagens na tela e alterna para a nova tela.
+        gf.update_screen(ai_settings, screen, stats, spaceship, aliens, bullets, play_button)
 
 
 run_game()
