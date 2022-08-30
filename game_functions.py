@@ -6,7 +6,7 @@ from alien import Alien
 
 
 # Responde a eventos de pressionamento de teclas
-def check_keydown_events(event, ai_settings, screen, spaceship, bullets):
+def check_keydown_events(event, ai_settings, screen, stats, spaceship, bullets):
 
     # Controla o movimento da aeronave
     # Move a espaçonave para a direita ou para esquerda
@@ -19,7 +19,8 @@ def check_keydown_events(event, ai_settings, screen, spaceship, bullets):
     elif event.key == pygame.K_SPACE:
         fire_bullet(ai_settings, screen, spaceship, bullets)
 
-    elif event.key == pygame.K_q: 
+    elif event.key == pygame.K_q:
+        save_scores(stats)
         sys.exit() 
 
 
@@ -35,25 +36,26 @@ def check_keyup_events(event, spaceship):
 
 
 # Verifica os eventos que serão apresentados na atualização da tela
-def check_events(ai_settings, screen, stats, play_button, spaceship, aliens, bullets):
+def check_events(ai_settings, screen, stats, sb, play_button, spaceship, aliens, bullets):
 
     for event in pygame.event.get(): 
         if event.type == pygame.QUIT:
+            save_scores(stats)
             sys.exit()
 
         elif event.type == pygame.KEYDOWN:
-            check_keydown_events(event, ai_settings, screen, spaceship, bullets)
+            check_keydown_events(event, ai_settings, screen, stats, spaceship, bullets)
 
         elif event.type == pygame.KEYUP:
             check_keyup_events(event, spaceship)
 
         elif event.type == pygame.MOUSEBUTTONDOWN:
             mouse_x, mouse_y = pygame.mouse.get_pos() 
-            check_play_button(ai_settings, screen, stats, play_button, spaceship, aliens, bullets, mouse_x, mouse_y)
+            check_play_button(ai_settings, screen, stats, sb, play_button, spaceship, aliens, bullets, mouse_x, mouse_y)
 
 
 # Inicia um novo jogo quando o jogador clicar em Play."
-def check_play_button(ai_settings, screen, stats, play_button, spaceship, aliens, bullets, mouse_x, mouse_y):
+def check_play_button(ai_settings, screen, stats, sb, play_button, spaceship, aliens, bullets, mouse_x, mouse_y):
 
     button_clicked = play_button.rect.collidepoint(mouse_x, mouse_y) 
 
@@ -67,8 +69,13 @@ def check_play_button(ai_settings, screen, stats, play_button, spaceship, aliens
 
         # Reinicia os dados estatísticos do jogo
         stats.reset_stats()
-
         stats.game_active = True
+
+        # Reinicia as imagens do painel de pontuação
+        sb.prep_score()
+        sb.prep_high_score() 
+        sb.prep_level()
+        sb.prep_pilot()
 
         # Esvazia a lista de alienígenas e de projéteis
         aliens.empty()
@@ -80,7 +87,7 @@ def check_play_button(ai_settings, screen, stats, play_button, spaceship, aliens
 
 
 # Atualiza as imagens na tela e alterna para a nova tela.
-def update_screen(ai_settings, screen, stats, spaceship, aliens, bullets, play_button):
+def update_screen(ai_settings, screen, stats, sb, spaceship, aliens, bullets, play_button):
 
     # Redesenha a tela a cada passagem pelo laço
     screen.fill(ai_settings.bg_color) 
@@ -93,6 +100,9 @@ def update_screen(ai_settings, screen, stats, spaceship, aliens, bullets, play_b
         spaceship.blitme()
         aliens.draw(screen)
 
+    # Desenha a informação sobre pontuação 
+    sb.show_score()
+
     # Desenha o botão Play se o jogo estiver inativo
     if not stats.game_active: 
         play_button.draw_button()
@@ -102,7 +112,7 @@ def update_screen(ai_settings, screen, stats, spaceship, aliens, bullets, play_b
 
 
 # Atualiza a posição dos projéteis e se livra dos projéteis antigos.
-def update_bullets(ai_settings, screen, spaceship, aliens, bullets):
+def update_bullets(ai_settings, screen, stats, sb, spaceship, aliens, bullets):
 
     # Atualiza as posições dos projéteis 
     bullets.update()
@@ -114,18 +124,31 @@ def update_bullets(ai_settings, screen, spaceship, aliens, bullets):
 
     # Verifica se algum projétil atingiu os alienígenas
     # Em caso afirmativo, livra-se do projétil e do alienígena
-    check_bullet_alien_collisions(ai_settings, screen, spaceship, aliens, bullets)
+    check_bullet_alien_collisions(ai_settings, screen, stats, sb, spaceship, aliens, bullets)
 
 
 # Responde a colisões entre projéteis e alienígenas.
-def check_bullet_alien_collisions(ai_settings, screen, spaceship, aliens, bullets):
+def check_bullet_alien_collisions(ai_settings, screen, stats, sb, spaceship, aliens, bullets):
 
     collisions = pygame.sprite.groupcollide(bullets, aliens, True, True)
-    
+
+    if collisions:
+        for aliens in collisions.values():
+            stats.score += ai_settings.alien_points * len(aliens) 
+            sb.prep_score()
+            check_high_score(stats, sb)
+
     # Destrói projéteis existentes, aumenta a velocidade do jogo e cria nova frota
+    # Se a frota toda for destruída, inicia um novo nível
     if len(aliens) == 0:
+        
         ai_settings.increase_speed()
         bullets.empty()
+
+        # Aumenta o nível
+        stats.level += 1
+        sb.prep_level()
+
         create_fleet(ai_settings, screen, spaceship, aliens)
 
 
@@ -187,11 +210,14 @@ def create_alien(ai_settings, screen, aliens, alien_number, row_number):
 
 
 # Responde ao fato de a espaçonave ter sido atingida por um alienígena
-def ship_hit(ai_settings, stats, screen, spaceship, aliens, bullets):
+def ship_hit(ai_settings, screen, stats, sb, spaceship, aliens, bullets):
 
     if stats.ships_left > 0: 
         # Diminui o número de aeronaves 
         stats.ships_left -= 1
+
+        # Atualiza o painel de pontuações
+        sb.prep_pilot()
     
         # Esvazia a lista de alienígenas e de projéteis
         aliens.empty()
@@ -210,17 +236,17 @@ def ship_hit(ai_settings, stats, screen, spaceship, aliens, bullets):
 
 
 # Verifica se algum alienígena alcançou a parte inferior da tela
-def check_aliens_bottom(ai_settings, stats, screen, ship, aliens, bullets):
+def check_aliens_bottom(ai_settings, screen, stats, sb, spaceship, aliens, bullets):
 
     screen_rect = screen.get_rect()
     for alien in aliens.sprites(): 
         if alien.rect.bottom >= screen_rect.bottom: 
-            ship_hit(ai_settings, stats, screen, ship, aliens, bullets)
+            ship_hit(ai_settings, screen, stats, sb, spaceship, aliens, bullets)
             break
 
 
 # Atualiza as posições de todos os alienígenas da frota.
-def update_aliens(ai_settings, stats, screen, spaceship, aliens, bullets):
+def update_aliens(ai_settings, screen, stats, sb, spaceship, aliens, bullets):
 
     # Verifica se a frota está em uma das bordas e então atualiza as posições de todos os alienígenas da frota.
     check_fleet_edges(ai_settings, aliens)
@@ -228,10 +254,10 @@ def update_aliens(ai_settings, stats, screen, spaceship, aliens, bullets):
 
     # Verifica se houve colisões entre alienígenas e a espaçonave
     if pygame.sprite.spritecollideany(spaceship, aliens):
-        ship_hit(ai_settings, stats, screen, spaceship, aliens, bullets)
+        ship_hit(ai_settings, screen, stats, sb, spaceship, aliens, bullets)
     
     # Verifica se há algum alienígena que atingiu a parte inferior da tela
-    check_aliens_bottom(ai_settings, stats, screen, spaceship, aliens, bullets)
+    check_aliens_bottom(ai_settings, screen, stats, sb, spaceship, aliens, bullets)
 
 
 # Responde apropriadamente se algum alienígena alcançou uma borda
@@ -249,3 +275,29 @@ def change_fleet_direction(ai_settings, aliens):
     for alien in aliens.sprites():
         alien.rect.y += ai_settings.fleet_drop_speed 
     ai_settings.fleet_direction *= -1
+
+
+# Verifica se há uma nova pontuação máxima
+def check_high_score(stats, sb):
+
+    if stats.score > stats.high_score: 
+        stats.high_score = stats.score
+        sb.prep_high_score()
+
+
+# Salva as 10 maiores pontuações
+def save_scores(stats):
+
+    score = stats.score
+    scores = []
+
+    filepath = 'scores.txt'
+
+    with open(filepath, 'r') as file_object:
+        lines = file_object.readlines()
+        for line in lines:
+            scores.append(int(line))
+
+    if len(scores) < 10 or score > min(scores):
+        with open(filepath, 'a') as file_object:
+            file_object.write(f'\n{score}')
